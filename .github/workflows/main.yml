@@ -10,6 +10,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -24,3 +28,22 @@ jobs:
       - name: build nixfmt
         run: nix build -L .#nixfmt-static
         if: success() || failure()
+
+  auto-format:
+    needs: check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          # required
+          app-id: ${{ vars.app_id }}
+          private-key: ${{ secrets.app_private_key }}
+      - uses: cachix/install-nix-action@v20
+      - uses: actions/checkout@v4
+      - run: |
+          ./sync-pr.sh \
+            https://github.com/${{ github.repository }} \
+            ${{ github.event.pull_request.number }} \
+            https://${{ steps.app-token.outputs.token }}@github.com/${{ github.repository_owner }}/nixpkgs \
