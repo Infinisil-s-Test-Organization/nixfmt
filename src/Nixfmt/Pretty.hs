@@ -525,7 +525,7 @@ instance Pretty Expression where
             prettyIf :: Doc -> Expression -> Doc
             prettyIf sep (If if_ cond then_ expr0 else_ expr1)
                 -- `if cond then` if it fits on one line, otherwise `if\n  cond\nthen` (with cond indented)
-                = group (pretty if_ <> line <> nest (pretty cond) <> line <> pretty then_)
+                = group (pretty if_ <> hardline <> nest (pretty cond) <> line <> pretty then_)
                 <> (surroundWith sep $ nest $ group expr0)
                 -- Using hardline here is okay because it will only apply to nested ifs, which should not be inline anyways.
                 <> pretty (moveTrailingCommentUp else_) <> hardspace <> prettyIf hardline expr1
