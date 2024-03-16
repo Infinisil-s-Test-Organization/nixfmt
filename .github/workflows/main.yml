@@ -42,11 +42,6 @@ jobs:
           private-key: ${{ secrets.app_private_key }}
       - uses: cachix/install-nix-action@v20
       - uses: actions/checkout@v4
-      - run: |
-          ./sync-pr.sh \
-            https://github.com/${{ github.repository }} \
-            ${{ github.event.pull_request.number }} \
-            https://token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository_owner }}/nixpkgs \
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
@@ -63,4 +58,19 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           edit-mode: replace
           body: |
-            [Nixpkgs diff](https://github.com/${{ github.repository_owner }}/nixpkgs/tree/nixfmt-${{ github.event.pull_request.number }})
+            Nixpkgs diff [processing]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)..
+
+      - run: |
+          ./sync-pr.sh \
+            https://github.com/${{ github.repository }} \
+            ${{ github.event.pull_request.number }} \
+            https://token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository_owner }}/nixpkgs \
+
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            [Nixpkgs diff](https://github.com/${{ github.repository_owner }}/nixpkgs/commits/nixfmt-${{ github.event.pull_request.number }})
