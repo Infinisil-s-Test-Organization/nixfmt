@@ -46,4 +46,4 @@ jobs:
           ./sync-pr.sh \
             https://github.com/${{ github.repository }} \
             ${{ github.event.pull_request.number }} \
-            https://${{ steps.app-token.outputs.token }}@github.com/${{ github.repository_owner }}/nixpkgs \
+            https://token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository_owner }}/nixpkgs \
