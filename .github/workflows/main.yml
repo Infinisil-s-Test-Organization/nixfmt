@@ -63,4 +63,4 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           edit-mode: replace
           body: |
-            [Nixpkgs diff](https://github.com/${{ github.repository_owner }}/nixpkgs/tree/nixfmt-${{ github.event.pull_request.number }}
+            [Nixpkgs diff](https://github.com/${{ github.repository_owner }}/nixpkgs/tree/nixfmt-${{ github.event.pull_request.number }})
