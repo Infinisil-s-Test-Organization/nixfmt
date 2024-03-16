@@ -37,6 +37,7 @@ jobs:
           # required
           app-id: ${{ vars.app_id }}
           private-key: ${{ secrets.app_private_key }}
+          repositories: nixpkgs
       - uses: cachix/install-nix-action@v20
       - uses: actions/checkout@v4
       - run: |
