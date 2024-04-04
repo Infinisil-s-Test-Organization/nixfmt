@@ -10,6 +10,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -33,3 +37,49 @@ jobs:
 
       - name: run tests
         run: nix-shell --run ./test/test.sh
+
+  auto-format:
+    needs: check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Nixpkgs diff
+
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            Nixpkgs diff [processing](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})..
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          # required
+          app-id: ${{ vars.app_id }}
+          private-key: ${{ secrets.app_private_key }}
+      - uses: cachix/install-nix-action@v20
+      - uses: actions/checkout@v4
+
+      - run: |
+          ./scripts/sync-pr.sh \
+            https://github.com/${{ github.repository }} \
+            ${{ github.event.pull_request.number }} \
+            https://token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository_owner }}/nixpkgs \
+
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            [Nixpkgs diff](https://github.com/${{ github.repository_owner }}/nixpkgs/commits/nixfmt-${{ github.event.pull_request.number }})
