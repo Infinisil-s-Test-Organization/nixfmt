@@ -159,19 +159,21 @@ else
           echo "Not all nixfmt commits are cached"
           false
         else
-          echo "Checking whether commit with index $(( nixpkgsCommitCount + 1 )) in nixpkgs corresponds to commit with index $nixpkgsCommitCount in nixfmt"
           # A bit messy, but we kind of go back from the head of the branch via parents.
           # This only works correctly because we verified that the branch is linear.
           # An alternative would be to read the commits into an array, just like it's done for prCommits
           nixpkgsCommit=$(git -C nixpkgs.git rev-parse "mirrorBranch~$((previousNixpkgsCommitCount - (nixpkgsCommitCount + 1)))")
+          nixfmtCommit=${prCommits[$nixpkgsCommitCount]}
+
+          echo "Checking whether commit with index $(( nixpkgsCommitCount + 1 )) ($nixpkgsCommit) in nixpkgs corresponds to commit with index $nixpkgsCommitCount ($nixfmtCommit) in nixfmt"
 
           # We generate the bodies of the commits to contain the nixfmt commit so we can check against it here to verify it's the same
           body=$(git -C nixpkgs.git log -1 "$nixpkgsCommit" --pretty=%B)
           expectedBody=$(bodyForCommitIndex "$nixpkgsCommitCount")
           if [[ "$body" == "$expectedBody" ]]; then
-            echo "It does, both are: $body"
+            echo "It does!"
           else
-            echo "It does not, body of nixpkgs commit $nixpkgsCommit is"
+            echo "It does not, body of nixpkgs commit is:"
             echo "$body"
             echo "But expected body is"
             echo "$expectedBody"
@@ -244,7 +246,7 @@ next() {
     git -C nixpkgs checkout "$nixpkgsBaseCommit" -- .
 
     step "Running nixfmt on nixpkgs"
-    if ! xargs -r -0 -P"$(nproc)" -n1 -a <(find nixpkgs -type f -name '*.nix' -print0) result/bin/nixfmt; then
+    if ! time xargs -r -0 -P"$(nproc)" -n1 -a <(find nixpkgs -type f -name '*.nix' -print0) result/bin/nixfmt; then
       echo -e "\e[31mFailed to run nixfmt on some files\e[0m"
       exit 1
     fi
