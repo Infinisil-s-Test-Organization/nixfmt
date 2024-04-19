@@ -134,7 +134,7 @@ instance Pretty Binder where
       pretty inherit
         <> ( if null ids
               then pretty semicolon
-              else line <> nest (sepBy (if length ids < 4 then line else hardline) ids <> line' <> pretty semicolon)
+              else line <> nest (sepBy (if length ids < 10 then line else hardline) ids <> line' <> pretty semicolon)
            )
   -- `inherit (foo) bar` statement
   pretty (Inherit inherit (Just source) ids semicolon) =
